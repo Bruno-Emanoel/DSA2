@@ -66,7 +66,7 @@ public:
         m_hash_table.clear();
         
         std::cout << std::endl;
-        overall_total += total;
+        overall_total += total / (double) data.size();
         ++amount;
       }
       std::cout << "Total average = " << (overall_total / (double)amount) << std::endl;
