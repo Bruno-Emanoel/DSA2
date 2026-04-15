@@ -1,5 +1,14 @@
 #include <array>
 #include <utility>
+#include <bitset>
+#include <queue>
+#include <vector>
+#include <random>
+
+int random1_100() {
+  static std::uniform_int_distribution<int> uni(1,100);
+  return uni(rng);
+}
 
 template <typename K, typename T>
 struct HashData {
@@ -39,7 +48,7 @@ class HashTable {
     BINARY_TREE,
     RANDOMIZED
   } m_reallocation_type = NO_REALLOC;
-  
+  int m_reallocation_chance = 50;
 public: 
   HashTable() = default;
 
@@ -65,7 +74,7 @@ public:
 
     while (m_data[i].k != 0 && m_data[i].k != r.k) {
       if(m_reallocation_type == RANDOMIZED) {
-        if(uniform(rng)%2) {
+        if(random1_100()<=m_reallocation_chance) {
           std::swap(r, m_data[i]);
           i = H::hash1(r.k);
           step = H::hash2(r.k);
@@ -100,8 +109,46 @@ public:
     return i;
   }
 
+  struct NodeT {
+    int ind, val, back;
+    NodeT() = default;
+    NodeT(int a, int b, int c): ind(a), val(b), back(c) {}
+  };
   int realloc_binary_tree(const DataT &r) {
-    return 1; // TODO: implement
+    using namespace std;
+    int i = H::hash1(r.k);
+    int step = H::hash2(r.k);
+    static bitset<M*M> used;
+    used[i + M*step] = true;
+    static vector<NodeT> tree;
+    tree.emplace_back(i, r.k, -1);
+    for(int j = 0; j < tree.size(); ++j) {
+      auto [ ind, val, back ] = tree[j];
+      if(m_data[ind].k == 0) {
+        while(tree[j].back!=-1){
+          m_data[tree[j].ind] = m_data[tree[tree[j].back].ind];
+          j = tree[j].back;
+        }
+        i = tree[j].ind;
+        break;
+      }
+      int jump = H::hash2(val);
+      if(!used[(ind + jump)%M + jump*M]) {
+        used[(ind + jump)%M + jump*M] = true;
+        tree.emplace_back((ind + jump)%M, val, back);
+      }
+      jump = H::hash2(m_data[ind].k);
+      if(!used[(ind + jump)%M + jump*M]) {
+        used[(ind + jump)%M + jump*M] = true;
+        tree.emplace_back((ind + jump)%M, m_data[ind].k, j);
+      }
+    }
+    for(auto &toers : tree) {
+      int step = H::hash2(toers.val);
+      used[toers.ind + step*M] = false;
+    }
+    tree.clear();
+    return i;
   }
 
   int realloc(const DataT &r) {
@@ -127,5 +174,5 @@ public:
   void set_randomized_realloc() { m_reallocation_type = RANDOMIZED; }
   void set_brent_realloc() { m_reallocation_type = BRENT; }
   void set_binary_realloc() { m_reallocation_type = BINARY_TREE; }
-
+  void set_reallocation_chance(int x) { m_reallocation_chance = x; }
 };

@@ -1,6 +1,6 @@
 #include <cstdlib>
 
-void gen_test_cases(std::string data_location, int n, int value_quantity, int seed, int max_val = 1e2) {
+void gen_test_cases(std::string data_location, int n, int value_quantity, int seed, int max_val = 1e3) {
   namespace fs = std::filesystem;
   using namespace std;
   
@@ -21,6 +21,7 @@ void gen_test_cases(std::string data_location, int n, int value_quantity, int se
     exit(0);
   }
   
+  srand(seed);
   rng = mt19937(seed);
   uniform = uniform_int_distribution<int>(1, max_val);
 

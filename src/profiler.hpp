@@ -4,9 +4,9 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
-#include "util/random.hpp"
-#include "algorithms/hashing.hpp"
-#include "util/generators.hpp"
+#include "src/util/random.hpp"
+#include "src/util/generators.hpp"
+#include "src/algorithms/hashing.hpp"
 
 class Profiler {
   bool m_generate_tests = false;
@@ -34,7 +34,11 @@ public:
 
   void profile() {
     if(m_generate_tests) {
+      #ifdef TABLE_SIZE
+      gen_test_cases(m_test_folder, m_test_quantity, m_value_quantity, m_seed, TABLE_SIZE*TABLE_SIZE);
+      #else
       gen_test_cases(m_test_folder, m_test_quantity, m_value_quantity, m_seed);
+      #endif
     }
     
     std::filesystem::path data_path{m_test_folder};
@@ -109,6 +113,8 @@ public:
           m_hash_table.set_no_realloc();
           break;
         }
+      }else if(str == "--reallocation_chance") {
+        m_hash_table.set_reallocation_chance(std::stoi(argv[++i]));
       }
     }
   }
