@@ -1,1 +1,6 @@
 data/tests
+out*
+a.*
+gmon.out
+*.log
+exec/*

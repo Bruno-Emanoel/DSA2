@@ -14,7 +14,9 @@ class Profiler {
   std::string m_test_folder = "data/tests";
   int m_test_quantity = 1;
   int m_value_quantity = 9;
+  int m_table_size = 11;
   int m_seed = 47;
+  bool m_exec_tests = 1;
   enum Method {
     LINEAR = 1,
     DOUBLE = 2
@@ -34,20 +36,18 @@ public:
 
   void profile() {
     if(m_generate_tests) {
-      #ifdef TABLE_SIZE
-      gen_test_cases(m_test_folder, m_test_quantity, m_value_quantity, m_seed, TABLE_SIZE*TABLE_SIZE);
-      #else
-      gen_test_cases(m_test_folder, m_test_quantity, m_value_quantity, m_seed);
-      #endif
+      gen_test_cases(m_test_folder, m_test_quantity, m_value_quantity, m_seed, m_table_size*m_table_size);
     }
     
+    if(!m_exec_tests)
+      return;
+
     std::filesystem::path data_path{m_test_folder};
     try {
       double overall_total = 0.0;
       int amount = 0;
       for(const auto& file : std::filesystem::directory_iterator(data_path))
       if(file.is_regular_file()) {
-
         std::vector<int> data;
         std::ifstream fs(file.path());
         int x;
@@ -93,10 +93,16 @@ public:
         m_print_table = true;
       }else if(str == "--seed") {
         m_seed = std::stoi(argv[++i]);
+        rng = std::mt19937(m_seed);
       }else if(str == "--test_quantity") {
         m_test_quantity = std::stoi(argv[++i]);
       }else if(str == "--value_quantity") {
         m_value_quantity = std::stoi(argv[++i]);
+      }else if(str == "--table_size") {
+        m_table_size = std::stoi(argv[++i]);
+        m_hash_table = HashTable<int,int>(m_table_size);
+      }else if(str == "--exec_tests") {
+        m_exec_tests = std::stoi(argv[++i])!=0;
       }else if(str == "--reallocation_method") {
         int val = std::stoi(argv[++i]);
         switch (val) {

@@ -1,4 +1,3 @@
-#include <array>
 #include <utility>
 #include <bitset>
 #include <queue>
@@ -19,27 +18,20 @@ struct HashData {
   HashData(K k): HashData(k, k) {}
 };
 
-#ifdef TABLE_SIZE
-constexpr int DEFAULT_M = TABLE_SIZE;
-#else
-constexpr int DEFAULT_M = 11; // necessarily a prime
-#endif
-
-template <typename K = int, int M = DEFAULT_M>
+template <typename K = int>
 struct HashFunction {
-  static int hash1(K k) { return ((k % M) + M) % M; }
-  static int hash2(K k) { 
-    int val  = hash1(k / M); 
-    return val ? val : 1;
+  static int hash1(K k, int M) { return ((k % M) + M) % M; }
+  static int hash2(K k, int M) { 
+    int val  = hash1(k / M, M); 
+    return val>1 ? val : 1;
   }
 };
 
-template <typename K = int, typename T = int, int M = DEFAULT_M> 
+template <typename K = int, typename T = int> 
 class HashTable {
   typedef HashData<K, T> DataT;
-  typedef HashFunction<K, M> H;
+  typedef HashFunction<K> H;
 
-  std::array<DataT,M> m_data;
   unsigned int m_size = 0;
   int m_aux;
   enum {
@@ -48,13 +40,15 @@ class HashTable {
     BINARY_TREE,
     RANDOMIZED
   } m_reallocation_type = NO_REALLOC;
-  int m_reallocation_chance = 50;
+  int m_reallocation_chance = 50, M = 11;
+  std::vector<DataT> m_data;
 public: 
-  HashTable() = default;
+  HashTable(): m_data(M) {};
+  HashTable(int M): M(M), m_data(M) {};
 
   int search(const DataT &r) {
-    int i = H::hash1(r.k);
-    int step = H::hash2(r.k);
+    int i = H::hash1(r.k,M);
+    int step = H::hash2(r.k,M);
     int cnt = 1;
     while(cnt < M && m_data[i].k != 0 && m_data[i].k != r.k)
       i = (i + step) % M, ++cnt;
@@ -69,15 +63,15 @@ public:
   int insert(DataT r) {
     if(m_size == M)
       return -1;
-    int i = H::hash1(r.k);
-    int step = H::hash2(r.k);
+    int i = H::hash1(r.k,M);
+    int step = H::hash2(r.k,M);
 
     while (m_data[i].k != 0 && m_data[i].k != r.k) {
       if(m_reallocation_type == RANDOMIZED) {
         if(random1_100()<=m_reallocation_chance) {
           std::swap(r, m_data[i]);
-          i = H::hash1(r.k);
-          step = H::hash2(r.k);
+          i = H::hash1(r.k,M);
+          step = H::hash2(r.k,M);
         }
       }
       i = (i + step) % M;
@@ -93,12 +87,12 @@ public:
   }
 
   int realloc_brent(const DataT &r) {
-    int i = H::hash1(r.k);
-    int step = H::hash2(r.k);
+    int i = H::hash1(r.k,M);
+    int step = H::hash2(r.k,M);
     for(int p = 1; p < M; ++p)
       for(int q = 0; q < p; ++q) {
         int j = (i + step * (p - q - 1)) % M;
-        int jump = H::hash2(m_data[j].k);
+        int jump = H::hash2(m_data[j].k,M);
         int k = (j + jump * q) % M;
         if(m_data[k].k == 0) {
           m_data[k] = m_data[j];
@@ -116,9 +110,9 @@ public:
   };
   int realloc_binary_tree(const DataT &r) {
     using namespace std;
-    int i = H::hash1(r.k);
-    int step = H::hash2(r.k);
-    static bitset<M*M> used;
+    int i = H::hash1(r.k,M);
+    int step = H::hash2(r.k,M);
+    static vector<bool> used(M*M);
     used[i + M*step] = true;
     static vector<NodeT> tree;
     tree.emplace_back(i, r.k, -1);
@@ -132,19 +126,19 @@ public:
         i = tree[j].ind;
         break;
       }
-      int jump = H::hash2(val);
+      int jump = H::hash2(val,M);
       if(!used[(ind + jump)%M + jump*M]) {
         used[(ind + jump)%M + jump*M] = true;
         tree.emplace_back((ind + jump)%M, val, back);
       }
-      jump = H::hash2(m_data[ind].k);
+      jump = H::hash2(m_data[ind].k,M);
       if(!used[(ind + jump)%M + jump*M]) {
         used[(ind + jump)%M + jump*M] = true;
         tree.emplace_back((ind + jump)%M, m_data[ind].k, j);
       }
     }
     for(auto &toers : tree) {
-      int step = H::hash2(toers.val);
+      int step = H::hash2(toers.val,M);
       used[toers.ind + step*M] = false;
     }
     tree.clear();

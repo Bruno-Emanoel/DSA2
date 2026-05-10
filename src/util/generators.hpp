@@ -3,17 +3,17 @@
 void gen_test_cases(std::string data_location, int n, int value_quantity, int seed, int max_val = 1e3) {
   namespace fs = std::filesystem;
   using namespace std;
-  
+  if(max_val <= 0)
+    max_val = 1e8;
   fs::path data_path(data_location);
 
   try {
     if (fs::exists(data_path)) {
-      for(const auto &file : fs::directory_iterator(data_path)) {
+      for(const auto &file : fs::directory_iterator(data_path))
         fs::remove_all(file.path());
-      }
       cout << "Data folder cleared." << endl;
     } else {
-      fs::create_directory(data_path);
+      fs::create_directories(data_path);
       cout << "Data folder created" << endl;
     }
   } catch (const fs::filesystem_error& ex) {
@@ -43,5 +43,5 @@ void gen_test_cases(std::string data_location, int n, int value_quantity, int se
 
     cout << "Done #" << i+1 << endl;
   }
-
+  
 }
