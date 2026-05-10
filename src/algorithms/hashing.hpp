@@ -164,6 +164,15 @@ public:
       m_data[i] = DataT();
   }
 
+  /*
+    TODO: Reinsert elements. Currently, previously inserted elements are lost
+  */
+  void resize(size_t n) {
+    M = n;
+    m_data.resize(M);
+    clear();
+  }
+
   void set_no_realloc() { m_reallocation_type = NO_REALLOC; }
   void set_randomized_realloc() { m_reallocation_type = RANDOMIZED; }
   void set_brent_realloc() { m_reallocation_type = BRENT; }
