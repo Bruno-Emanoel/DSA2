@@ -119,3 +119,20 @@ void BTreePrinter::after_traversal ()
 
    std::cout << "\n";
 }
+
+/*
+int main() {
+   using namespace std;
+   Btree tree;
+   int n; cin >> n;
+   for(int i = 0; i < n; ++i) {
+      int x; cin >> x;
+      tree.insert(x,x);
+   }
+   int q; cin >> q;
+   for(int i = 0; i < q; ++i) {
+      int x; cin >> x;
+      tree.erase(x);
+   }
+}
+*/

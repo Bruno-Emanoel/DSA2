@@ -40,6 +40,7 @@ public:
     else
       for(auto x : data) {
         m_btree->insert(x,x);
+        print_container();
       }
   }
 
@@ -81,10 +82,14 @@ public:
           while(std::cin >> x)
             data.emplace_back(x);
         }
-        add_elements(data);
         
-        if(m_print_container)
-          print_container();
+        if(m_print_container) {
+          std::cout << "elements added:" << std::endl;
+          for(auto x : data)
+            std::cout << x << ' ';
+          std::cout << std::endl;
+        }
+        add_elements(data);
 
         if(m_container_type == "hash") {
           int total = 0.0;
@@ -102,6 +107,16 @@ public:
           ++amount;
         }else {
           std::cout << "B-Tree height = " << m_btree->depth() << std::endl;
+          std::cout << std::endl << "Starting random deleting" << std::endl;
+          std::vector<int> toDel = selectRandom(data, data.size()/4);
+          for(auto x : toDel)
+            std::cout << x << ' ';
+          std::cout << std::endl;
+          for(auto x : toDel) {
+            m_btree->erase(x);
+            if(m_print_container)
+              print_container();
+          }
           m_btree->clear();
           return;
         }
